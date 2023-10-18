@@ -10,10 +10,6 @@ const TaskSchema = mongoose.Schema({
         required:true,
         unique:true
     },
-    Description :{
-        type:String,
-        required:true
-    },
     Technologies:{
         type:String,
         required:true

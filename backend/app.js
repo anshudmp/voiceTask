@@ -4,6 +4,22 @@ const taskRoutes = require('./api/routes/tasks')
 const userRoutes = require('./api/routes/user')
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const cors = require('cors');
+
+
+// Allow requests from your React app's domain (replace with your React app's domain)
+const allowedOrigins = ['http://localhost:3000'];
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+  })
+);
 mongoose.connect('mongodb+srv://kushalreddy5466:'+ process.env.MONGO_ATLAS_PW+'@taskmangement.93reafy.mongodb.net/?retryWrites=true&w=majority',{
 useNewUrlParser: true, 
 useUnifiedTopology: true

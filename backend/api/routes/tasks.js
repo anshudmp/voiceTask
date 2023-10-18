@@ -24,7 +24,7 @@ router.post('/',
     const task = new Task({
         Title:req.body.Title,
         Manager: req.body.Manager,
-        Description: req.body.Description,
+        
         Technologies:req.body.Technologies,
         startdate:req.body.startdate,
         enddate:req.body.enddate
@@ -48,7 +48,7 @@ router.put('/:id',async (req,res) => {
     const taskdata = {};
     if(Title) taskdata.Title = Title;
     if(Manager) taskdata.Manager = Manager;
-    if(Description) taskdata.Description = Description;
+   
     if(Technologies) taskdata.Technologies = Technologies; 
     if(startdate) taskdata.startdate = startdate;
     if(enddate) taskdata.enddate = enddate

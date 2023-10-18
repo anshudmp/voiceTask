@@ -1,0 +1,22 @@
+/* HomePage.css */
+.task-grid {
+    display: grid;
+    gap: 20px;
+  }
+  
+  .task-cards {
+    display: flex;
+    gap: 20px;
+  }
+  
+  .task-card {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 16px;
+    background-color: #f9f9f9;
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  
+  /* You can add more styling as needed */
+  
