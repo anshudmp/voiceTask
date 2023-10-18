@@ -1,0 +1,31 @@
+1. Introduction
+Node.js is a powerful runtime environment for building server-side applications using JavaScript. Mongoose is an Object Data Modeling (ODM) library for MongoDB and Node.js, which simplifies working with MongoDB by providing a more structured and efficient way to interact with your data.
+
+This README will guide you through setting up a Node.js project and using Mongoose to work with MongoDB databases.
+
+2. Prerequisites
+Before you begin, make sure you have the following prerequisites installed:
+
+Node.js: Node.js is required to run your Node.js application.
+npm: Node Package Manager, usually included with Node.js.
+MongoDB: A running MongoDB server or access to a remote MongoDB instance.
+
+3.Getting Started
+Clone or download this repository to your local machine.
+
+Navigate to the project directory using the command line:
+cd voiceTask/backend
+
+Install the project dependencies using npm:
+npm install
+
+Create a .env file in the project root directory and configure your MongoDB connection URI. For example:
+MONGO_URI=mongodb://localhost/your-database-name
+
+Run the Node.js application:
+npm start
+
+4. Additional Resources
+Node.js Official Documentation
+Mongoose Official Documentation
+MongoDB Official Documentation
