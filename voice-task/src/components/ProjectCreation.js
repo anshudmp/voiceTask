@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { Container, TextField, Button, Typography, Box, Alert, Collapse, IconButton } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import './ProjectCreation.css'; // Importing the CSS file
-
+import axios from 'axios';
 function ProjectCreation() {
   const location = useLocation();
   const editProjectData = location.state?.project;
@@ -37,11 +37,27 @@ function ProjectCreation() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Here, implement your API call for creating/updating the project
-    // ...
 
-    setShowSuccessMessage(true); // Show success message
-    setTimeout(() => setShowSuccessMessage(false), 3000); // Hide after 3 seconds
+    const projectData = {
+      Title: form.projectTitle,
+      Manager: form.projectManager,
+      Technologies: form.technologies,
+      startdate: form.startDate,
+      enddate: form.endDate,
+    };
+
+    try {
+      const response = isEditMode 
+        ? await axios.put(`http://localhost:5000/projects/${editProjectData._id}`, projectData)
+        : await axios.post('http://localhost:5000/projects', projectData);
+
+      console.log(response.data);
+      setShowSuccessMessage(true); // Show success message
+      setTimeout(() => setShowSuccessMessage(false), 3000); // Hide after 3 seconds
+    } catch (error) {
+      console.error('Error submitting project:', error);
+      // Handle errors, show error message to the user if necessary
+    }
   };
 
   return (

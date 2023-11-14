@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
-
-const TaskSchema = mongoose.Schema({
+const Schema = mongoose.Schema;
+const ProjectSchema = mongoose.Schema({
     Title :{
         type:String,
         required:true
@@ -8,7 +8,7 @@ const TaskSchema = mongoose.Schema({
     Manager :{
         type:String,
         required:true,
-        unique:true
+        unique:false
     },
     Technologies:{
         type:String,
@@ -21,7 +21,8 @@ const TaskSchema = mongoose.Schema({
     enddate:{
         type:Date,
         default:Date.now
-    }
+    },
+    tasks: [{ type: Schema.Types.ObjectId, ref: 'Task' }]
 });
 
-module.exports = mongoose.model('tasks',TaskSchema);
+module.exports = mongoose.model('projects',ProjectSchema);

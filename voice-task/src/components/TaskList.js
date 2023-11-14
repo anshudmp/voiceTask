@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { AppBar, Toolbar, Box, IconButton, Card, CardContent, Typography, Collapse, styled } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ModeIcon from '@mui/icons-material/Mode';
@@ -6,6 +6,7 @@ import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useNavigate, useLocation } from 'react-router-dom';
 import HomeIcon from '@mui/icons-material/Home';
+import axios from 'axios';
 
 const ExpandMore = styled((props) => {
   const { expand, ...other } = props;
@@ -20,15 +21,27 @@ const ExpandMore = styled((props) => {
 function TaskList() {
     const navigate = useNavigate();
     const location = useLocation();
+    const projectId = location.state?.projectId;
     const projectTitle = location.state?.projectTitle;
-
     const [expandedStates, setExpandedStates] = useState({});
-    const [tasks, setTasks] = useState([
-        // Dummy tasks data
-        {"id": "1", "title": "Task 1", "description": "Description 1", "technologies": "Tech 1, Tech 2", "startDate": "2023-06-01", "endDate": "2023-06-15"},
-        {"id": "2", "title": "Task 2", "description": "Description 2", "technologies": "Tech 3, Tech 4", "startDate": "2023-07-01", "endDate": "2023-07-15"},
-        // ... add more tasks as needed ...
-    ]);
+    const [tasks, setTasks] = useState([]);
+    console.log("ProjectID:",projectId);
+    console.log("Project Title",projectTitle);
+    useEffect(() => {
+        const fetchTasks = async () => {
+            try {
+
+                const response = await axios.get(`http://localhost:5000/tasks/tasks?title=${projectTitle}`);
+                setTasks(response.data);
+                console.log("Response",response.data);
+            } catch (err) {
+                console.error('Error fetching tasks:', err);
+                // Handle error appropriately
+            }
+        };
+
+        fetchTasks();
+    }, [projectId]);
 
     const handleExpandClick = (id) => {
         setExpandedStates(prevStates => ({
@@ -68,9 +81,9 @@ function TaskList() {
                 <h2>Tasks for {projectTitle}</h2>
                 <div>
                     {tasks.map((task, index) => (
-                        <Card key={task.id} className="task-card">
+                        <Card key={task._id} className="task-card">
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 16px' }}>
-                                <Typography variant="h6">{task.title}</Typography>
+                                <Typography variant="h6">{task.Title}</Typography>
                                 <div>
                                     <IconButton aria-label="delete the task" onClick={() => handleDeleteTask(task.id)}>
                                         <DeleteIcon />
@@ -92,8 +105,8 @@ function TaskList() {
                                 <CardContent>
                                     <Typography paragraph>Description: {task.description}</Typography>
                                     <Typography paragraph>Technologies: {task.technologies}</Typography>
-                                    <Typography paragraph>Start Date: {task.startDate}</Typography>
-                                    <Typography paragraph>End Date: {task.endDate}</Typography>
+                                    <Typography paragraph>Start Date: {task.startdate.split("T")[0]}</Typography>
+                                    <Typography paragraph>End Date: {task.enddate.split("T")[0]}</Typography>
                                 </CardContent>
                             </Collapse>
                         </Card>

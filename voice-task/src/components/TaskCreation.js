@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Container, TextField, Button, Typography, Box, Alert, IconButton, Collapse } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-
+import axios from 'axios';
 function TaskCreation() {
     const navigate = useNavigate();
     const location = useLocation();
@@ -17,7 +17,9 @@ function TaskCreation() {
         endDate: '',
     });
     const [showSuccessMessage, setShowSuccessMessage] = useState(false);
-
+    console.log("location",location.state);
+    const projectTitle = location.state?.projectTitle;
+    
     useEffect(() => {
         if (editTaskData) {
             setIsEditMode(true);
@@ -37,10 +39,24 @@ function TaskCreation() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        // Here, add your logic for creating or updating a task
-        // For example, make an API call to save the task data
 
-        setShowSuccessMessage(true); // Show success message
+        const taskData = {
+            Title: form.taskTitle,
+            description: form.description,
+            Technologies: form.technologies,
+            startdate: form.startDate,
+            enddate: form.endDate
+        };
+
+        try {
+            const response = await axios.post(`http://localhost:5000/tasks/tasks?title=${encodeURIComponent(projectTitle)}`, taskData);
+            console.log(response.data);
+            setShowSuccessMessage(true); // Show success message
+            setTimeout(() => setShowSuccessMessage(false), 3000); // Hide after 3 seconds
+        } catch (error) {
+            console.error('Error creating task:', error);
+            // Handle errors, show error message to the user if necessary
+        }
     };
 
     return (

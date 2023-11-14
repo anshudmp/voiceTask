@@ -10,6 +10,7 @@ import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import ListIcon from '@mui/icons-material/List';
 import { useNavigate } from 'react-router-dom'; 
 import alanBtn from '@alan-ai/alan-sdk-web';
+import axios from 'axios';
 
 const ExpandMore = styled((props) => {
   const { expand, ...other } = props;
@@ -39,14 +40,20 @@ function HomePage() {
     navigate('/edit', { state: { project } });
   };
 
-  const handleDeleteClick = (title) => {
-    setProjects(projects.filter(project => project.title !== title));
+  const handleDeleteClick = async (project) => {
+    try {
+      const response = await axios.delete(`http://localhost:5000/projects/${project._id}`);
+      console.log(response.data);
+      // Filter out the deleted project from the state
+      setProjects(projects.filter(p => p._id !== project._id));
+  } catch (error) {
+      console.error('Error deleting project:', error);
+      // Handle errors, show error message to the user if necessary
+  }
   };
-  const [projects, setProjects] = useState([
-    {"title":"Project Alpha","Manager":"M1","Technologies":"T1, T2, T3","startdate":"2023-05-06","enddate":"2023-10-12"},
-    {"title":"Project Beta","Manager":"M2","Technologies":"T4, T5, T6","startdate":"2023-06-10","enddate":"2023-11-15"},
-    {"title":"Project C","Manager":"M3","Technologies":"T7, T8, T9","startdate":"2023-07-20","enddate":"2024-01-05"}
-  ]);
+  const [projects, setProjects] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 //   const handleEditClick = useCallback((project) => {
 //     navigate('/edit', { state: { project } });
 // }, [navigate]);
@@ -54,11 +61,28 @@ function HomePage() {
 // const handleDeleteClick = useCallback((title) => {
 //     setProjects(projects.filter(project => project.title !== title));
 // }, [projects]);
+useEffect(() => {
+  axios.get('http://localhost:5000/projects')
+    .then(response => {
+      const formattedProjects = response.data.map(project => ({
+        ...project,
+        title: project.Title, // Converting 'Title' to 'title'
+        Manager: project.Manager,
+        Technologies: project.Technologies,
+        startdate: project.startdate.split("T")[0],
+        enddate: project.enddate.split("T")[0],
+      }));
+      setProjects(formattedProjects);
+      setIsLoading(false);
+    })
+    .catch(err => {
+      setError(err);
+      setIsLoading(false);
+    });
+}, []);
 
 
-
-
-  useEffect(() => {
+useEffect(() => {
 
     if (!alanBtnInstance.current) {
       alanBtnInstance.current = alanBtn({
@@ -66,11 +90,11 @@ function HomePage() {
         onCommand: (commandData) => {
           switch (commandData.command) {
             case 'createProject':
-        
               navigate('/create');
               break;
           case 'editProject':
             console.log(commandData.title)
+            console.log("check",commandData.startdate)
               const projectToEdit = projects.find(project => project.title.toLowerCase() === commandData.title.toLowerCase());
               
               if (projectToEdit) {
@@ -82,8 +106,10 @@ function HomePage() {
               break;
           case 'viewTasks':
               const projectToView = projects.find(project => project.title.toLowerCase() === commandData.title.toLowerCase());
-              if (projectToView) {
-                  navigate('/tasks', { state: { projectTitle: projectToView.title } });
+              const projectIdView = projects.find(project => project._id.toLowerCase() === commandData._id.toLowerCase());
+              if (projectToView ||projectIdView ) {
+                  navigate('/tasks', { state: {projectId:projectIdView.projectId,projectTitle: projectToView.title } });
+                console.log(commandData)
               }
               break;
               case 'searchProjects':
@@ -156,7 +182,7 @@ function HomePage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 16px' }}>
                 <Typography variant="h6">{project.title}</Typography>
                 <div>
-                  <IconButton aria-label="delete the project" onClick={() => handleDeleteClick(project.title)}>
+                  <IconButton aria-label="delete the project" onClick={() => handleDeleteClick(project)}>
                     <DeleteIcon />
                   </IconButton>
                   <IconButton aria-label="edit" onClick={() => handleEditClick(project)}>

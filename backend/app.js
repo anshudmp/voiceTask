@@ -1,6 +1,7 @@
 const express = require('express')
 const app = express();
-const taskRoutes = require('./api/routes/tasks')
+const ProjectRoutes = require('./api/routes/projects')
+const TaskRoutes = require('./api/routes/task');
 const userRoutes = require('./api/routes/user')
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
@@ -27,17 +28,8 @@ useUnifiedTopology: true
 
 app.use(bodyParser.json()); // for parsing application/json
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use('/tasks',taskRoutes)
-
+app.use('/projects',ProjectRoutes)
+app.use('/tasks', TaskRoutes);
 app.use('/user',userRoutes)
-
-app.use((req,res,next) => {
-    res.status(200).json({
-        message:"It's Backend"
-    })
-
-});
-
-
 
 module.exports = app;
