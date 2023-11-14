@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect,useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Container, TextField, Button, Typography, Box, Alert, IconButton, Collapse } from '@mui/material';
+import { Container, TextField, Button, Typography, Box, Alert, IconButton, Collapse,AppBar,Toolbar,Chip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-
+import HomeIcon from '@mui/icons-material/Home';
+import useAlanAI from './useAlanAI';
 function TaskCreation() {
     const navigate = useNavigate();
     const location = useLocation();
@@ -17,8 +18,16 @@ function TaskCreation() {
         endDate: '',
     });
     const [showSuccessMessage, setShowSuccessMessage] = useState(false);
-
+    const commandsHandler = useCallback(({ command }) => {
+        if (command === 'homePage') {
+          navigate('/');
+        }
+       
+      }, [/* dependencies */]);
+    
+      useAlanAI(commandsHandler);
     useEffect(() => {
+        console.log(editTaskData)
         if (editTaskData) {
             setIsEditMode(true);
             setForm({
@@ -44,6 +53,34 @@ function TaskCreation() {
     };
 
     return (
+        <>
+         
+        <AppBar position="static">
+                <Toolbar>
+                    <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'flex-end' }}>
+                    <IconButton color="inherit" onClick={() => navigate('/')}>
+              <HomeIcon />
+            </IconButton>
+                        
+                    </Box>
+                </Toolbar>
+            </AppBar>
+            <Box sx={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      my: 2,
+      backgroundColor: 'primary.light', // Adding a light background color
+      padding: '20px',
+      borderRadius: '10px', // Rounded corners
+      boxShadow: '0px 3px 5px rgba(0,0,0,0.2)', // Subtle shadow for depth
+    }}>
+      <Typography variant="subtitle1" style={{ fontWeight: 'bold', color: 'primary.contrastText' }}>
+        You can say commands like:
+      </Typography>
+      <Chip label="Go to Home Page" variant="outlined" sx={{ m: 1, color: 'white', border: 'none', backgroundColor: 'secondary.main' }} />
+     
+    </Box>
         <Container maxWidth="sm">
             <Box sx={{ marginTop: 4, marginBottom: 4 }}>
                 <Typography variant="h4" component="h1" gutterBottom>
@@ -134,6 +171,7 @@ function TaskCreation() {
                 </form>
             </Box>
         </Container>
+        </>
     );
 }
 

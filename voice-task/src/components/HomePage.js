@@ -9,8 +9,10 @@ import HomeIcon from '@mui/icons-material/Home';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import ListIcon from '@mui/icons-material/List';
 import { useNavigate } from 'react-router-dom'; 
-import alanBtn from '@alan-ai/alan-sdk-web';
 
+import { InputAdornment } from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
+import useAlanAI from './useAlanAI';
 const ExpandMore = styled((props) => {
   const { expand, ...other } = props;
   return <IconButton {...other} />;
@@ -20,6 +22,8 @@ const ExpandMore = styled((props) => {
     duration: theme.transitions.duration.shortest,
   }),
 }));
+
+
 
 function HomePage() {
   const [expandedStates, setExpandedStates] = useState({});
@@ -55,57 +59,49 @@ function HomePage() {
 //     setProjects(projects.filter(project => project.title !== title));
 // }, [projects]);
 
+const alanCommandsHandler = useCallback(({ command, title, searchTerm }) => {
+  switch (command) {
+    case 'createProject':
+      navigate('/create');
+      break;
+    case 'editProject':
+      const project = projects.find(project => project.title.toLowerCase() === title.toLowerCase());
+      if (project) {
+        navigate('/edit', { state: { project } });
+      }
+      break;
+    case 'deleteProject':
+      setProjects(prevProjects => prevProjects.filter(project => project.title.toLowerCase() !== title.toLowerCase()));
+      break;
+    case 'viewTasks':
+      const projectToView = projects.find(project => project.title.toLowerCase() === title.toLowerCase());
+      if (projectToView) {
+        navigate('/tasks', { state: { projectTitle: projectToView.title } });
+      }
+      break;
+    case 'searchProjects':
+      setSearchTerm(searchTerm.toLowerCase());
+      break;
+    case 'expandProject':
+      const projectToExpand = projects.find(project => project.title.toLowerCase() === title.toLowerCase());
+      if (projectToExpand) {
+        setExpandedStates(prevStates => ({
+          ...prevStates,
+          [projectToExpand.title]: !prevStates[projectToExpand.title]
+        }));
+      }
+      break;
+    default:
+      // Other commands
+      break;
+  }
+}, [navigate, projects]);
 
+useAlanAI(alanCommandsHandler);
 
 
   useEffect(() => {
 
-    if (!alanBtnInstance.current) {
-      alanBtnInstance.current = alanBtn({
-        key: '',
-        onCommand: (commandData) => {
-          switch (commandData.command) {
-            case 'createProject':
-        
-              navigate('/create');
-              break;
-          case 'editProject':
-            console.log(commandData.title)
-              const projectToEdit = projects.find(project => project.title.toLowerCase() === commandData.title.toLowerCase());
-              
-              if (projectToEdit) {
-                navigate('/edit', { state: { projectToEdit } });
-              }
-              break;
-          case 'deleteProject':
-              setProjects(prevProjects => prevProjects.filter(project => project.title.toLowerCase() !== commandData.title.toLowerCase()));
-              break;
-          case 'viewTasks':
-              const projectToView = projects.find(project => project.title.toLowerCase() === commandData.title.toLowerCase());
-              if (projectToView) {
-                  navigate('/tasks', { state: { projectTitle: projectToView.title } });
-              }
-              break;
-              case 'searchProjects':
-                setSearchTerm(commandData.searchTerm.toLowerCase());
-                break;
-          case 'expandProject':
-            const projectToExpand = projects.find(project => project.title.toLowerCase() === commandData.title.toLowerCase());
-            if (projectToExpand) {
-              setExpandedStates(prevStates => ({
-                ...prevStates,
-                [projectToExpand.title]: !prevStates[projectToExpand.title]
-            }));
-
-            }
-              break;
-            default:
-              // Handle other commands or add a default action
-              break;
-          }
-        },
-      });
-    }
   }, [navigate,projects ]);
 
   const handleSearchChange = (event) => {
@@ -121,32 +117,69 @@ function HomePage() {
       <AppBar position="static">
         <Toolbar>
           <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'flex-end' }}>
-            <IconButton color="inherit" onClick={() => navigate('/')}>
-              <HomeIcon />
-            </IconButton>
+           
             <IconButton color="inherit" onClick={() => navigate('/create')}>
               <AddCircleOutlineIcon />
             </IconButton>
             <TextField
-              label="Search Projects"
-              variant="outlined"
-              size="small"
-              onChange={handleSearchChange}
-              sx={{ marginLeft: 2, width: '20%' }}
-            />
+      label="Search Projects"
+      variant="outlined"
+      size="small"
+      onChange={handleSearchChange}
+      InputProps={{
+        startAdornment: (
+          <InputAdornment position="start">
+            <SearchIcon style={{ color: 'white' }} />
+          </InputAdornment>
+        ),
+        style: {
+          color: 'white', // Text color
+        },
+      }}
+      InputLabelProps={{
+        style: { color: 'white' }, // Label color
+      }}
+      sx={{
+        marginLeft: 2,
+        width: '20%',
+        backgroundColor: 'primary.main', // Background color
+        '& .MuiOutlinedInput-root': {
+          '& fieldset': {
+            borderColor: 'white', // Border color
+            borderRadius: '15px',
+          },
+          '&:hover fieldset': {
+            borderColor: 'white', // Hover border color
+          },
+          '&.Mui-focused fieldset': {
+            borderColor: 'white', // Focus border color
+          },
+        },
+      }}
+    />
           </Box>
         </Toolbar>
       </AppBar>
-    
-<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', my: 2 }}>
-  <Typography variant="subtitle1">You can say commands like:</Typography>
-  <Chip label="Create Project" variant="outlined" sx={{ m: 1 }} />
-  <Chip label="Edit Project" variant="outlined" sx={{ m: 1 }} />
-  <Chip label="Delete Project" variant="outlined" sx={{ m: 1 }} />
-  <Chip label="View Tasks" variant="outlined" sx={{ m: 1 }} />
-  <Chip label="Expand Project" variant="outlined" sx={{ m: 1 }} />
-  <Chip label="Search Project" variant="outlined" sx={{ m: 1 }} />
-</Box>
+      <Box sx={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      my: 2,
+      backgroundColor: 'primary.light', // Adding a light background color
+      padding: '20px',
+      borderRadius: '10px', // Rounded corners
+      boxShadow: '0px 3px 5px rgba(0,0,0,0.2)', // Subtle shadow for depth
+    }}>
+      <Typography variant="subtitle1" style={{ fontWeight: 'bold', color: 'primary.contrastText' }}>
+        You can say commands like:
+      </Typography>
+      <Chip label="Create a new project" variant="outlined" sx={{ m: 1, color: 'white', border: 'none', backgroundColor: 'secondary.main' }} />
+      <Chip label="Edit project ProjectTitle" variant="outlined" sx={{ m: 1, color: 'white', border: 'none', backgroundColor: 'secondary.main' }} />
+      <Chip label="Delete project ProjectTitle" variant="outlined" sx={{ m: 1, color: 'white', border: 'none', backgroundColor: 'secondary.main' }} />
+      <Chip label="View Tasks for project ProjectTitle" variant="outlined" sx={{ m: 1, color: 'white', border: 'none', backgroundColor: 'secondary.main' }} />
+      <Chip label="Expand Project ProjectTitle" variant="outlined" sx={{ m: 1, color: 'white', border: 'none', backgroundColor: 'secondary.main' }} />
+      <Chip label="Search for projects ProjectTitle" variant="outlined" sx={{ m: 1, color: 'white', border: 'none', backgroundColor: 'secondary.main' }} />
+    </Box>
 
       <div className="task-grid">
         <h2>Projects</h2>
