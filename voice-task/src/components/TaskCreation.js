@@ -8,7 +8,7 @@ function TaskCreation() {
     const navigate = useNavigate();
     const location = useLocation();
     const editTaskData = location.state?.task;
-
+    console.log("***edit task data",editTaskData)
     const [isEditMode, setIsEditMode] = useState(false);
     const [form, setForm] = useState({
         taskTitle: '',
@@ -20,24 +20,28 @@ function TaskCreation() {
     const [showSuccessMessage, setShowSuccessMessage] = useState(false);
     console.log("location",location.state);
     const projectTitle = location.state?.projectTitle;
+    console.log("********project Title",projectTitle)
         const commandsHandler = useCallback(({ command }) => {
         if (command === 'homePage') {
           navigate('/');
         }
        
       }, [/* dependencies */]);
-    
+      const formatDate = (dateString) => {
+        return dateString.split("T")[0];
+      };
       useAlanAI(commandsHandler);
     useEffect(() => {
         console.log(editTaskData)
         if (editTaskData) {
+            console.log("Edit Task Data",editTaskData);
             setIsEditMode(true);
             setForm({
-                taskTitle: editTaskData.title,
+                taskTitle: editTaskData.Title,
                 description: editTaskData.description,
-                technologies: editTaskData.technologies,
-                startDate: editTaskData.startDate,
-                endDate: editTaskData.endDate,
+                technologies: editTaskData.Technologies,
+                startDate: formatDate(editTaskData.startdate),
+                endDate: formatDate(editTaskData.enddate),
             });
         }
     }, [editTaskData]);
@@ -48,7 +52,7 @@ function TaskCreation() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
+    
         const taskData = {
             Title: form.taskTitle,
             description: form.description,
@@ -56,17 +60,28 @@ function TaskCreation() {
             startdate: form.startDate,
             enddate: form.endDate
         };
-
+        console.log("Title",form.taskTitle);
+        console.log("project Title",projectTitle);
         try {
-            const response = await axios.post(`http://localhost:5000/tasks/tasks?title=${encodeURIComponent(projectTitle)}`, taskData);
+            let response;
+            if (isEditMode) {
+                // If in edit mode, make a PUT request to update the task
+                console.log("task edit")
+                console.log("project Title",projectTitle);
+                response = await axios.put(`http://localhost:5000/tasks/tasks?title=${encodeURIComponent(projectTitle)}&Title=${encodeURIComponent(form.taskTitle)}`, taskData);
+            } else {
+                // If not in edit mode, make a POST request to create a new task
+                response = await axios.post(`http://localhost:5000/tasks/tasks?title=${encodeURIComponent(projectTitle)}`, taskData);
+            }
             console.log(response.data);
             setShowSuccessMessage(true); // Show success message
             setTimeout(() => setShowSuccessMessage(false), 3000); // Hide after 3 seconds
         } catch (error) {
-            console.error('Error creating task:', error);
+            console.error('Error processing task:', error);
             // Handle errors, show error message to the user if necessary
         }
     };
+    
 
     return (
         <>

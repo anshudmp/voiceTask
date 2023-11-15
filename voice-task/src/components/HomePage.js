@@ -65,6 +65,9 @@ function HomePage() {
 // const handleDeleteClick = useCallback((title) => {
 //     setProjects(projects.filter(project => project.title !== title));
 // }, [projects]);
+
+
+
 useEffect(() => {
   axios.get('http://localhost:5000/projects')
     .then(response => {
@@ -76,7 +79,8 @@ useEffect(() => {
         startdate: project.startdate.split("T")[0],
         enddate: project.enddate.split("T")[0],
       }));
-      setProjects(formattedProjects);
+      setProjects(formattedProjects); 
+      console.log("formattedProjects",formattedProjects);
       setIsLoading(false);
     })
     .catch(err => {
@@ -85,58 +89,100 @@ useEffect(() => {
     });
 }, []);
 
+const alanCommandsHandler = useCallback(({ command, title, searchTerm }) => {
+  switch (command) {
+    case 'createProject':
+      navigate('/create');
+      break;
+    case 'editProject':
+      const project = projects.find(project => project.title.toLowerCase() === title.toLowerCase());
+      if (project) {
+        navigate('/edit', { state: { project } });
+      }
+      break;
+    case 'deleteProject':
+      setProjects(prevProjects => prevProjects.filter(project => project.title.toLowerCase() !== title.toLowerCase()));
+      break;
+    case 'viewTasks':
+      const projectToView = projects.find(project => project.title.toLowerCase() === title.toLowerCase());
+      console.log(projects)
+      console.log(title)
+      if (projectToView) {
+        console.log(projectToView)
+        navigate('/tasks', { state: { projectTitle: projectToView.title } });
+      }
+      break;
+    case 'searchProjects':
+      setSearchTerm(searchTerm.toLowerCase());
+      break;
+    case 'expandProject':
+      const projectToExpand = projects.find(project => project.title.toLowerCase() === title.toLowerCase());
+      if (projectToExpand) {
+        setExpandedStates(prevStates => ({
+          ...prevStates,
+          [projectToExpand.title]: !prevStates[projectToExpand.title]
+        }));
+      }
+      break;
+    default:
+      // Other commands
+      break;
+  }
+}, [navigate, projects]);
 
-useEffect(() => {
+useAlanAI(alanCommandsHandler);
 
-    if (!alanBtnInstance.current) {
-      alanBtnInstance.current = alanBtn({
-        key: '',
-        onCommand: (commandData) => {
-          switch (commandData.command) {
-            case 'createProject':
-              navigate('/create');
-              break;
-          case 'editProject':
-            console.log(commandData.title)
-            console.log("check",commandData.startdate)
-              const projectToEdit = projects.find(project => project.title.toLowerCase() === commandData.title.toLowerCase());
+// useEffect(() => {
+
+//     if (!alanBtnInstance.current) {
+//       alanBtnInstance.current = alanBtn({
+//         key: '',
+//         onCommand: (commandData) => {
+//           switch (commandData.command) {
+//             case 'createProject':
+//               navigate('/create');
+//               break;
+//           case 'editProject':
+//             console.log(commandData.title)
+//             console.log("check",commandData.startdate)
+//               const projectToEdit = projects.find(project => project.title.toLowerCase() === commandData.title.toLowerCase());
               
-              if (projectToEdit) {
-                navigate('/edit', { state: { projectToEdit } });
-              }
-              break;
-          case 'deleteProject':
-              setProjects(prevProjects => prevProjects.filter(project => project.title.toLowerCase() !== commandData.title.toLowerCase()));
-              break;
-          case 'viewTasks':
-              const projectToView = projects.find(project => project.title.toLowerCase() === commandData.title.toLowerCase());
-              const projectIdView = projects.find(project => project._id.toLowerCase() === commandData._id.toLowerCase());
-              if (projectToView ||projectIdView ) {
-                  navigate('/tasks', { state: {projectId:projectIdView.projectId,projectTitle: projectToView.title } });
-                console.log(commandData)
-              }
-              break;
-              case 'searchProjects':
-                setSearchTerm(commandData.searchTerm.toLowerCase());
-                break;
-          case 'expandProject':
-            const projectToExpand = projects.find(project => project.title.toLowerCase() === commandData.title.toLowerCase());
-            if (projectToExpand) {
-              setExpandedStates(prevStates => ({
-                ...prevStates,
-                [projectToExpand.title]: !prevStates[projectToExpand.title]
-            }));
+//               if (projectToEdit) {
+//                 navigate('/edit', { state: { projectToEdit } });
+//               }
+//               break;
+//           case 'deleteProject':
+//               setProjects(prevProjects => prevProjects.filter(project => project.title.toLowerCase() !== commandData.title.toLowerCase()));
+//               break;
+//           case 'viewTasks':
+//               const projectToView = projects.find(project => project.title.toLowerCase() === commandData.title.toLowerCase());
+//               const projectIdView = projects.find(project => project._id.toLowerCase() === commandData._id.toLowerCase());
+//               if (projectToView ||projectIdView ) {
+//                   navigate('/tasks', { state: {projectId:projectIdView.projectId,projectTitle: projectToView.title } });
+//                 console.log(commandData)
+//               }
+//               break;
+//               case 'searchProjects':
+//                 setSearchTerm(commandData.searchTerm.toLowerCase());
+//                 break;
+//           case 'expandProject':
+//             const projectToExpand = projects.find(project => project.title.toLowerCase() === commandData.title.toLowerCase());
+//             if (projectToExpand) {
+//               setExpandedStates(prevStates => ({
+//                 ...prevStates,
+//                 [projectToExpand.title]: !prevStates[projectToExpand.title]
+//             }));
 
-            }
-              break;
-            default:
-              // Handle other commands or add a default action
-              break;
-          }
-        },
-      });
-    }
-  }, [navigate,projects ]);
+//             }
+//               break;
+//             default:
+//               // Handle other commands or add a default action
+//               break;
+//           }
+//         },
+//       });
+//     }
+//   }, [navigate,projects ]);
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value.toLowerCase());

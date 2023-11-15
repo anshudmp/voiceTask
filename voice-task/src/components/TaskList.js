@@ -28,6 +28,45 @@ function TaskList() {
     const [tasks, setTasks] = useState([]);
     console.log("ProjectID:",projectId);
     console.log("Project Title",projectTitle);
+    const alanCommandsHandler = useCallback(({ command, title }) => {
+        switch (command) {
+          case 'createTask':
+            navigate('/create-task', { state: { projectTitle } });
+            break;
+          case 'editTask':
+            const taskToEdit = tasks.find(task => task.title.toLowerCase() === title.toLowerCase());
+            console.log("taskto edit****",taskToEdit);
+        if (taskToEdit) {
+            console.log("tasklist",taskToEdit);
+            console.log("*****Project Title",projectTitle);
+            // Pass both the task and the project title to the edit task page
+            navigate('/edit-task', { state: { task: taskToEdit, projectTitle } });
+        }
+            break;
+          case 'deleteTask':
+            const taskToDelete = tasks.find(task => task.title.toLowerCase() === title.toLowerCase());
+            if(taskToDelete){
+                console.log(taskToDelete)
+            setTasks(tasks.filter(task => task.title !== taskToDelete.title));
+        }
+
+            break;
+  
+          case 'expandTask':
+            const taskToExpand = tasks.find(task => task.title.toLowerCase() === title.toLowerCase());
+            setExpandedStates(prevStates => ({
+                ...prevStates,
+                [taskToExpand.title]: !prevStates[taskToExpand.title]
+            }));
+          
+            break;
+          default:
+            // Other commands
+            break;
+        }
+      }, [navigate, tasks,projectTitle]);
+      
+      useAlanAI(alanCommandsHandler);
     useEffect(() => {
         const fetchTasks = async () => {
             try {
@@ -44,7 +83,7 @@ function TaskList() {
         fetchTasks();
     }, [projectId]);
 
-    const handleExpandClick = (id) => {
+    const handleExpandClick = (title) => {
         setExpandedStates(prevStates => ({
             ...prevStates,
             [title]: !prevStates[title]
@@ -52,12 +91,27 @@ function TaskList() {
     };
 
 
-    const handleEditTask = (task) => {
-        navigate('/edit-task', { state: { task } }); // Navigate to task edit page with task data
+    const handleEditTask = (task,projectTitle) => {
+        console.log("~~~~~~~~~~~~~Project Title",projectTitle);
+        navigate('/edit-task', { state: { projectTitle,task } }); // Navigate to task edit page with task data
     };
 
-    const handleDeleteTask = (title) => {
-        setTasks(tasks.filter(task => task.title !== title));
+    const handleDeleteTask = async (taskTitle, projectTitle) => {
+        try {
+            // Send a DELETE request to the server
+            console.log("~~~~~~~~~~~~taskTitle",taskTitle);
+            const tasktt = taskTitle.Title;
+            console.log("$$$$$tasktt",tasktt)
+            const response = await axios.delete(`http://localhost:5000/tasks/tasks?projectTitle=${encodeURIComponent(projectTitle)}&taskTitle=${encodeURIComponent(tasktt)}`);
+    
+            // Update the local state to reflect the deletion
+            setTasks(prevTasks => prevTasks.filter(task => task.title !== taskTitle));
+    
+            console.log(response.data); // Log the server response
+        } catch (err) {
+            console.error('Error deleting task:', err);
+            // Handle error appropriately (e.g., show an error message to the user)
+        }
     };
 
     const handleCreateTask = () => {
@@ -106,10 +160,10 @@ function TaskList() {
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 16px' }}>
                                 <Typography variant="h6">{task.Title}</Typography>
                                 <div>
-                                    <IconButton aria-label="delete the task" onClick={() => handleDeleteTask(task.title)}>
+                                    <IconButton aria-label="delete the task" onClick={() => handleDeleteTask(task,projectTitle)}>
                                         <DeleteIcon />
                                     </IconButton>
-                                    <IconButton aria-label="edit" onClick={() => handleEditTask(task)}>
+                                    <IconButton aria-label="edit" onClick={() => handleEditTask(task,projectTitle)}>
                                         <ModeIcon />
                                     </IconButton>
                                     <ExpandMore
@@ -125,7 +179,7 @@ function TaskList() {
                             <Collapse in={expandedStates[task.title]} timeout="auto" unmountOnExit>
                                 <CardContent>
                                     <Typography paragraph>Description: {task.description}</Typography>
-                                    <Typography paragraph>Technologies: {task.technologies}</Typography>
+                                    <Typography paragraph>Technologies: {task.Technologies}</Typography>
                                     <Typography paragraph>Start Date: {task.startdate.split("T")[0]}</Typography>
                                     <Typography paragraph>End Date: {task.enddate.split("T")[0]}</Typography>
                                 </CardContent>
