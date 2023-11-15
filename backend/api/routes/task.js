@@ -40,13 +40,31 @@ router.post('/tasks', async (req, res) => {
 });
 
 
-router.put('/:taskId', async (req, res) => {
+router.put('/tasks', async (req, res) => {
     try {
-        const updatedTask = await Task.findByIdAndUpdate(req.params.taskId, req.body, { new: true });
-        if (!updatedTask) {
+        const projectTitle = req.query.title;
+        const taskTitle = req.query.Title;
+
+        // Find the project by its title
+        const project = await Project.findOne({ Title: projectTitle }).populate('tasks');
+        console.log("@@@@@@@Edit Project",project);
+        if (!project) {
+            return res.status(404).send('Project not found');
+        }
+
+        // Find the task by title
+        const taskToUpdate = project.tasks.find(task => task.Title === taskTitle);
+        if (!taskToUpdate) {
             return res.status(404).send('Task not found');
         }
-        res.json(updatedTask);
+
+        // Update the task
+        const updatedTask = await Task.findByIdAndUpdate(taskToUpdate._id, req.body, { new: true });
+        if (!updatedTask) {
+            return res.status(404).send('Error updating task');
+        }
+
+        res.status(200).json(updatedTask);
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');
@@ -54,22 +72,42 @@ router.put('/:taskId', async (req, res) => {
 });
 
 
-router.delete('/projects/:projectId/tasks/:taskId', async (req, res) => {
+
+router.delete('/tasks', async (req, res) => {
     try {
+        const projectTitle = req.query.projectTitle;
+        const taskTitle = req.query.taskTitle;
+        console.log("DELETE")
+
+        // Find the project by its title
+        const project = await Project.findOne({ Title: projectTitle }).populate('tasks');
+        console.log("!!Project",project)
+        if (!project) {
+            return res.status(404).send('Project not found');
+        }
+
+        // Find the task by title
+        const taskToDelete = project.tasks.find(task => task.Title === taskTitle);
+        if (!taskToDelete) {
+            return res.status(404).send('Task not found');
+        }
+
         // Remove the task from the project
-        await Project.findByIdAndUpdate(req.params.projectId, { $pull: { tasks: req.params.taskId } });
+        await Project.findByIdAndUpdate(project._id, { $pull: { tasks: taskToDelete._id } });
 
         // Delete the task
-        const deletedTask = await Task.findByIdAndRemove(req.params.taskId);
+        const deletedTask = await Task.findByIdAndRemove(taskToDelete._id);
         if (!deletedTask) {
-            return res.status(404).send('Task not found');
+            return res.status(404).send('Error deleting task');
         }
-        res.json({ msg: 'Task removed' });
+
+        res.status(200).json({ msg: 'Task removed' });
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');
     }
 });
+
 
 router.get('/tasks', async (req, res) => {
     try {
