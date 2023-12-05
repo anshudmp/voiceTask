@@ -1,5 +1,5 @@
-import React, { useState,useEffect ,useCallback} from 'react';
-import { AppBar, Toolbar, Box, IconButton, Card, CardContent, Typography, Collapse, styled,Chip } from '@mui/material';
+import React, { useState,useEffect ,useCallback,useRef} from 'react';
+import { AppBar, Toolbar, Box, IconButton, Card, CardContent, Typography, Collapse, styled,Chip ,TextField,InputAdornment} from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ModeIcon from '@mui/icons-material/Mode';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
@@ -9,6 +9,7 @@ import HomeIcon from '@mui/icons-material/Home';
 import axios from 'axios';
 import './TaskList.css';
 import useAlanAI from './useAlanAI';
+import SearchIcon from '@mui/icons-material/Search';
 const ExpandMore = styled((props) => {
   const { expand, ...other } = props;
   return <IconButton {...other} />;
@@ -26,15 +27,21 @@ function TaskList() {
     const projectTitle = location.state?.projectTitle;
     const [expandedStates, setExpandedStates] = useState({});
     const [tasks, setTasks] = useState([]);
+    const tasksRef = useRef(tasks);
+    const [searchTerm, setSearchTerm] = useState('');
+    useEffect(() => {
+        tasksRef.current = tasks;
+      }, [tasks]);
     console.log("ProjectID:",projectId);
     console.log("Project Title",projectTitle);
-    const alanCommandsHandler = useCallback(({ command, title }) => {
+    const alanCommandsHandler = useCallback(async ({ command, title,searchTerm }) => {
+        const currentTasks = tasksRef.current;
         switch (command) {
           case 'createTask':
             navigate('/create-task', { state: { projectTitle } });
             break;
           case 'editTask':
-            const taskToEdit = tasks.find(task => task.title.toLowerCase() === title.toLowerCase());
+            const taskToEdit = currentTasks.find(task => task.Title.toLowerCase() === title.toLowerCase());
             console.log("taskto edit****",taskToEdit);
         if (taskToEdit) {
             console.log("tasklist",taskToEdit);
@@ -43,22 +50,41 @@ function TaskList() {
             navigate('/edit-task', { state: { task: taskToEdit, projectTitle } });
         }
             break;
+            case 'searchTasks':
+                setSearchTerm(searchTerm.toLowerCase());
+                console.log("searchTerm",searchTerm)
+                break;
           case 'deleteTask':
-            const taskToDelete = tasks.find(task => task.title.toLowerCase() === title.toLowerCase());
+            const taskToDelete = currentTasks.find(task => task.Title.toLowerCase() === title.toLowerCase());
+
             if(taskToDelete){
-                console.log(taskToDelete)
-            setTasks(tasks.filter(task => task.title !== taskToDelete.title));
+                console.log("Delete",taskToDelete)
+           
+        }
+        try {
+           
+            const response = await axios.delete(`http://localhost:5000/tasks/tasks?projectTitle=${encodeURIComponent(projectTitle)}&taskTitle=${encodeURIComponent(taskToDelete.Title)}`);
+            // setTasks(tasks.filter(task => task.Title.lower() !== taskToDelete.Title.lower()));
+            // Update the local state to reflect the deletion
+             setTasks(prevTasks => prevTasks.filter(task => task.Title !== taskToDelete.Title));
+    
+            // console.log(response.data); // Log the server response
+        } catch (err) {
+            console.error('Error deleting task:', err);
+            // Handle error appropriately (e.g., show an error message to the user)
         }
 
             break;
   
           case 'expandTask':
-            const taskToExpand = tasks.find(task => task.title.toLowerCase() === title.toLowerCase());
+            console.log("tasks",tasks)
+            const taskToExpand = currentTasks.find(task => task.Title.toLowerCase() === title.toLowerCase());
+            if(taskToExpand){
             setExpandedStates(prevStates => ({
                 ...prevStates,
-                [taskToExpand.title]: !prevStates[taskToExpand.title]
+                [taskToExpand.Title]: !prevStates[taskToExpand.Title]
             }));
-          
+        }
             break;
           default:
             // Other commands
@@ -84,28 +110,35 @@ function TaskList() {
     }, [projectId]);
 
     const handleExpandClick = (title) => {
+        console.log("Title",title)
         setExpandedStates(prevStates => ({
             ...prevStates,
             [title]: !prevStates[title]
         }));
     };
-
+    const handleSearchChange = (event) => {
+        setSearchTerm(event.target.value.toLowerCase());
+      };
+    
+      const filteredTasks = tasks.filter(task =>
+        task.Title.toLowerCase().includes(searchTerm)
+      );
 
     const handleEditTask = (task,projectTitle) => {
         console.log("~~~~~~~~~~~~~Project Title",projectTitle);
         navigate('/edit-task', { state: { projectTitle,task } }); // Navigate to task edit page with task data
     };
 
-    const handleDeleteTask = async (taskTitle, projectTitle) => {
+    const handleDeleteTask = async (task, projectTitle) => {
         try {
             // Send a DELETE request to the server
-            console.log("~~~~~~~~~~~~taskTitle",taskTitle);
-            const tasktt = taskTitle.Title;
+            // console.log("~~~~~~~~~~~~taskTitle",taskTitle);
+            const tasktt = task.Title;
             console.log("$$$$$tasktt",tasktt)
             const response = await axios.delete(`http://localhost:5000/tasks/tasks?projectTitle=${encodeURIComponent(projectTitle)}&taskTitle=${encodeURIComponent(tasktt)}`);
     
             // Update the local state to reflect the deletion
-            setTasks(prevTasks => prevTasks.filter(task => task.title !== taskTitle));
+            setTasks(prevTasks => prevTasks.filter(task => task.Title !== tasktt));
     
             console.log(response.data); // Log the server response
         } catch (err) {
@@ -129,6 +162,42 @@ function TaskList() {
                         <IconButton color="inherit" onClick={handleCreateTask}>
                             <AddCircleOutlineIcon />
                         </IconButton>
+                        <TextField
+      label="Search Tasks"
+      variant="outlined"
+      size="small"
+      onChange={handleSearchChange}
+      InputProps={{
+        startAdornment: (
+          <InputAdornment position="start">
+            <SearchIcon style={{ color: 'white' }} />
+          </InputAdornment>
+        ),
+        style: {
+          color: 'white', // Text color
+        },
+      }}
+      InputLabelProps={{
+        style: { color: 'white' }, // Label color
+      }}
+      sx={{
+        marginLeft: 2,
+        width: '20%',
+        backgroundColor: 'primary.main', // Background color
+        '& .MuiOutlinedInput-root': {
+          '& fieldset': {
+            borderColor: 'white', // Border color
+            borderRadius: '15px',
+          },
+          '&:hover fieldset': {
+            borderColor: 'white', // Hover border color
+          },
+          '&.Mui-focused fieldset': {
+            borderColor: 'white', // Focus border color
+          },
+        },
+      }}
+    />
                     </Box>
                 </Toolbar>
             </AppBar>
@@ -150,12 +219,13 @@ function TaskList() {
       <Chip label="Delete task TaskTitle" variant="outlined" sx={{ m: 1, color: 'white', border: 'none', backgroundColor: 'secondary.main' }} />
      
       <Chip label="Expand task TaskTitle" variant="outlined" sx={{ m: 1, color: 'white', border: 'none', backgroundColor: 'secondary.main' }} />
+      <Chip label="Search for tasks TaskTitle" variant="outlined" sx={{ m: 1, color: 'white', border: 'none', backgroundColor: 'secondary.main' }} />
      
     </Box>
             <div className="task-grid">
                 <h2>Tasks for {projectTitle}</h2>
                 <div>
-                    {tasks.map((task, index) => (
+                    {filteredTasks.map((task, index) => (
                         <Card key={task.id} className="task-card-list">
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 16px' }}>
                                 <Typography variant="h6">{task.Title}</Typography>
@@ -167,16 +237,16 @@ function TaskList() {
                                         <ModeIcon />
                                     </IconButton>
                                     <ExpandMore
-                                        expand={expandedStates[task.title]}
-                                        onClick={() => handleExpandClick(task.title)}
-                                        aria-expanded={expandedStates[task.title]}
+                                        expand={expandedStates[task.Title]}
+                                        onClick={() => handleExpandClick(task.Title)}
+                                        aria-expanded={expandedStates[task.Title]}
                                         aria-label="show more"
                                     >
                                         <ExpandMoreIcon />
                                     </ExpandMore>
                                 </div>
                             </div>
-                            <Collapse in={expandedStates[task.title]} timeout="auto" unmountOnExit>
+                            <Collapse in={expandedStates[task.Title]} timeout="auto" unmountOnExit>
                                 <CardContent>
                                     <Typography paragraph>Description: {task.description}</Typography>
                                     <Typography paragraph>Technologies: {task.Technologies}</Typography>

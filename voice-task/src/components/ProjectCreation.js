@@ -78,6 +78,9 @@ function ProjectCreation() {
     <>
     <AppBar position="static">
     <Toolbar>
+    <Typography variant="h6" style={{ flexGrow: 1, color: 'white' }}>
+      Voice Task
+    </Typography>
       <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'flex-end' }}>
         <IconButton color="inherit" onClick={() => navigate('/')}>
           <HomeIcon />

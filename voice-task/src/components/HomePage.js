@@ -30,7 +30,7 @@ function HomePage() {
   const [expandedStates, setExpandedStates] = useState({});
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
-  const alanBtnInstance = useRef(null);
+  // const alanBtnInstance = useRef(null);
 
   const handleExpandClick = (title) => {
     setExpandedStates(prevStates => ({
@@ -58,6 +58,11 @@ function HomePage() {
   const [projects, setProjects] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const projectsRef = useRef(projects);
+  useEffect(() => {
+    projectsRef.current = projects;
+  }, [projects]);
+  
 //   const handleEditClick = useCallback((project) => {
 //     navigate('/edit', { state: { project } });
 // }, [navigate]);
@@ -71,7 +76,7 @@ function HomePage() {
 useEffect(() => {
   axios.get('http://localhost:5000/projects')
     .then(response => {
-      const formattedProjects = response.data.map(project => ({
+      const projects = response.data.map(project => ({
         ...project,
         title: project.Title, // Converting 'Title' to 'title'
         Manager: project.Manager,
@@ -79,8 +84,9 @@ useEffect(() => {
         startdate: project.startdate.split("T")[0],
         enddate: project.enddate.split("T")[0],
       }));
-      setProjects(formattedProjects); 
-      console.log("formattedProjects",formattedProjects);
+      setProjects(projects); 
+      console.log("formattedProjects",projects);
+    
       setIsLoading(false);
     })
     .catch(err => {
@@ -89,22 +95,35 @@ useEffect(() => {
     });
 }, []);
 
-const alanCommandsHandler = useCallback(({ command, title, searchTerm }) => {
+const  alanCommandsHandler =  useCallback(async ({ command, title, searchTerm}) => {
+  const currentProjects = projectsRef.current;
   switch (command) {
     case 'createProject':
       navigate('/create');
       break;
     case 'editProject':
-      const project = projects.find(project => project.title.toLowerCase() === title.toLowerCase());
+      
+      const project = currentProjects?.find(project => project.title.toLowerCase() === title.toLowerCase());
+      console.log("project",currentProjects)
       if (project) {
         navigate('/edit', { state: { project } });
       }
       break;
     case 'deleteProject':
-      setProjects(prevProjects => prevProjects.filter(project => project.title.toLowerCase() !== title.toLowerCase()));
+      try {
+        const projectToDelete = currentProjects?.find(project => project.title.toLowerCase() === title.toLowerCase());
+        const response = await axios.delete(`http://localhost:5000/projects/${projectToDelete._id}`);
+        console.log(response.data);
+        // Filter out the deleted project from the state
+        setProjects(prevProjects => prevProjects.filter(project => project.title.toLowerCase() !== title.toLowerCase()));
+
+    } catch (error) {
+        console.error('Error deleting project:', error);
+        // Handle errors, show error message to the user if necessary
+    }
       break;
     case 'viewTasks':
-      const projectToView = projects.find(project => project.title.toLowerCase() === title.toLowerCase());
+      const projectToView = currentProjects.find(project => project.title.toLowerCase() === title.toLowerCase());
       console.log(projects)
       console.log(title)
       if (projectToView) {
@@ -116,7 +135,7 @@ const alanCommandsHandler = useCallback(({ command, title, searchTerm }) => {
       setSearchTerm(searchTerm.toLowerCase());
       break;
     case 'expandProject':
-      const projectToExpand = projects.find(project => project.title.toLowerCase() === title.toLowerCase());
+      const projectToExpand = currentProjects.find(project => project.title.toLowerCase() === title.toLowerCase());
       if (projectToExpand) {
         setExpandedStates(prevStates => ({
           ...prevStates,
@@ -128,9 +147,9 @@ const alanCommandsHandler = useCallback(({ command, title, searchTerm }) => {
       // Other commands
       break;
   }
-}, [navigate, projects]);
-
+},[]);
 useAlanAI(alanCommandsHandler);
+
 
 // useEffect(() => {
 
@@ -196,6 +215,9 @@ useAlanAI(alanCommandsHandler);
     <>
       <AppBar position="static">
         <Toolbar>
+        <Typography variant="h6" style={{ flexGrow: 1, color: 'white' }}>
+      Voice Task
+    </Typography>
           <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'flex-end' }}>
            
             <IconButton color="inherit" onClick={() => navigate('/create')}>

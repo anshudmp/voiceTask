@@ -1,0 +1,82 @@
+// {Name: Basic_example_for_AI_assistant}
+// {Description: Learn how to create a dialog script with voice/text commands and text corpus for question answering}
+
+// Use this sample to create your own voice/text commands
+intent('hello', p => {
+    p.play('(hello|hi there)');
+});
+
+intent('Create a new project', p => {
+    p.play({ command: 'createProject' });
+    p.play('Opening project creation page.');
+});
+intent('Go to home page', p => {
+    p.play({ command: 'homePage' });
+    p.play('Opening home page.');
+});
+
+
+intent('Edit (the )?project $(PROJECT* .+)', p => {
+    p.play({ command: 'editProject', title: p.PROJECT.value });
+    p.play(`Opening edit page for project ${p.PROJECT.value}.`);
+});
+
+intent('Delete (the )?project $(PROJECT* .+)', p => {
+    p.play({ command: 'deleteProject', title: p.PROJECT.value });
+    p.play(`Deleting project ${p.PROJECT.value}.`);
+});
+
+intent('View tasks for (the )?project $(PROJECT* .+)', p => {
+    p.play({ command: 'viewTasks', title: p.PROJECT.value });
+    p.play(`Showing tasks for project ${p.PROJECT.value}.`);
+});
+
+intent('Expand (the )?project $(PROJECT* .+)', p => {
+    p.play({ command: 'expandProject', title: p.PROJECT.value });
+    p.play(`Expanding details for project ${p.PROJECT.value}.`);
+});
+intent('Search for projects  $(TERM* .+)', p => {
+    p.play({ command: 'searchProjects', searchTerm: p.TERM.value });
+    p.play(`Searching for projects  ${p.TERM.value}.`);
+});
+
+intent('Create a new task', t => {
+    t.play({ command: 'createTask' });
+    t.play('Opening task creation page.');
+});
+
+intent('Edit (the )?task $(TASK* .+)', t => {
+    t.play({ command: 'editTask', title: t.TASK.value });
+    t.play(`Opening edit page for task ${t.TASK.value}.`);
+});
+
+intent('Delete (the )?task $(TASK* .+)', t => {
+    t.play({ command: 'deleteTask', title: t.TASK.value });
+    t.play(`Deleting task ${t.TASK.value}.`);
+});
+
+intent('Expand (the )?task $(TASK* .+)', t => {
+    t.play({ command: 'expandTask', title: t.TASK.value });
+    t.play(`Expanding details for task ${t.TASK.value}.`);
+});
+intent('Search for tasks  $(TERM* .+)', t => {
+    t.play({ command: 'searchTasks', searchTerm: t.TERM.value });
+    t.play(`Searching for tasks  ${t.TERM.value}.`);
+});
+// Add more intents as needed
+
+// 
+// // Give your AI assistant some knowledge about the world
+// corpus(`
+//     Hello, I'm Alan.
+//     This is a demo application.
+//     You can learn how to teach Alan useful skills.
+//     I can teach you how to write Alan Scripts.
+//     I can help you. I can do a lot of things. I can answer questions. I can do tasks.
+//     But they should be relevant to this application.
+//     I can help with this application.
+//     I'm Alan. I'm a virtual assistant. I'm here to help you with applications.
+//     This is a demo script. It shows how to use Alan.
+//     You can create dialogs and teach me.
+//     For example: I can help navigate this application.
+// `);
